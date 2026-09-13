@@ -1,0 +1,144 @@
+{
+  "title": "ELTA Courier",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Ρύθμιση ELTA Courier",
+        "description": "Η παρακολούθηση ELTA Courier δεν χρειάζεται λογαριασμό ή ταχυδρομικό κώδικα — ο κόμβος δημιουργείται αμέσως. Προσθέστε δέματα αργότερα μέσω των επιλογών της ολοκλήρωσης ή της υπηρεσίας `elta_courier.track_parcel`."
+      }
+    },
+    "abort": {
+      "already_configured": "Το ELTA Courier είναι ήδη ρυθμισμένο."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Επιλογές ELTA Courier",
+        "menu_options": {
+          "parcels": "Δέματα",
+          "settings": "Ρυθμίσεις"
+        },
+        "sections": {
+          "parcels": {
+            "name": "Δέματα",
+            "data": {
+              "add": "Προσθήκη δέματος",
+              "remove": "Αφαίρεση δεμάτων"
+            },
+            "data_description": {
+              "add": "Εισαγάγετε έναν κωδικό παρακολούθησης ELTA Courier για να ξεκινήσετε την παρακολούθησή του. Θα τον βρείτε στην επιβεβαίωση αποστολής ή στην κάρτα αποτυχημένης παράδοσης."
+            }
+          },
+          "delivered": {
+            "name": "Παραδοθέντα δέματα",
+            "data": {
+              "delivered_filter_type": "Φιλτράρισμα κατά",
+              "delivered_filter_amount": "Ποσότητα"
+            },
+            "data_description": {
+              "delivered_filter_type": "Εμφάνιση παραδοθέντων δεμάτων των τελευταίων X ημερών, ή περιορισμός στα X πιο πρόσφατα.",
+              "delivered_filter_amount": "Αριθμός ημερών ή δεμάτων προς εμφάνιση."
+            }
+          },
+          "history": {
+            "name": "Ιστορικό δέματος",
+            "data": {
+              "include_history": "Συμπερίληψη ιστορικού κατάστασης"
+            },
+            "data_description": {
+              "include_history": "Προσθέτει ένα χαρακτηριστικό ιστορικού ανά δέμα που καταγράφει κάθε ενημέρωση κατάστασης (χρονική σήμανση, κατάσταση, αρχικό κείμενο). Απενεργοποιημένο από προεπιλογή."
+            }
+          }
+        }
+      },
+      "parcels": {
+        "title": "Διαχείριση δεμάτων",
+        "data": {
+          "tracking_codes": "Κωδικοί παρακολούθησης"
+        }
+      },
+      "settings": {
+        "title": "Ρυθμίσεις",
+        "data": {
+          "delivered_filter_type": "Παραδοθέντα δέματα: φιλτράρισμα κατά",
+          "delivered_filter_amount": "Παραδοθέντα δέματα: ποσότητα",
+          "include_history": "Συμπερίληψη ιστορικού κατάστασης"
+        }
+      }
+    },
+    "error": {
+      "invalid_tracking_code": "Αυτό δεν μοιάζει με κωδικό παρακολούθησης ELTA Courier.",
+      "already_tracked": "Αυτό το δέμα παρακολουθείται ήδη."
+    }
+  },
+  "selector": {
+    "delivered_filter_type": {
+      "options": {
+        "days": "Ημέρες",
+        "parcels": "Αριθμός δεμάτων"
+      }
+    }
+  },
+  "services": {
+    "track_parcel": {
+      "name": "Παρακολούθηση δέματος",
+      "description": "Έναρξη παρακολούθησης ενός δέματος με τον κωδικό παρακολούθησης ELTA Courier.",
+      "fields": {
+        "tracking_code": {
+          "name": "Κωδικός παρακολούθησης",
+          "description": "Ο κωδικός παρακολούθησης ELTA Courier."
+        }
+      }
+    },
+    "untrack_parcel": {
+      "name": "Διακοπή παρακολούθησης δέματος",
+      "description": "Διακοπή παρακολούθησης ενός δέματος με τον κωδικό παρακολούθησης ELTA Courier.",
+      "fields": {
+        "tracking_code": {
+          "name": "Κωδικός παρακολούθησης",
+          "description": "Ο κωδικός παρακολούθησης ELTA Courier προς διακοπή."
+        }
+      }
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "parcel_registered": "Καταχωρήθηκε ένα δέμα",
+      "parcel_status_changed": "Άλλαξε η κατάσταση ενός δέματος",
+      "parcel_delivered": "Παραδόθηκε ένα δέμα",
+      "parcel_delivery_time_changed": "Άλλαξε η αναμενόμενη ώρα παράδοσης ενός δέματος"
+    }
+  },
+  "entity": {
+    "button": {
+      "refresh": {
+        "name": "Ανανέωση"
+      }
+    },
+    "calendar": {
+      "deliveries": {
+        "name": "Παραδόσεις"
+      }
+    },
+    "sensor": {
+      "incoming_parcels": {
+        "name": "Εισερχόμενα δέματα",
+        "unit_of_measurement": "δέματα"
+      },
+      "next_delivery": {
+        "name": "Επόμενη παράδοση"
+      },
+      "delivered_parcels": {
+        "name": "Παραδοθέντα δέματα",
+        "unit_of_measurement": "δέματα"
+      },
+      "last_update": {
+        "name": "Τελευταία επιτυχής ενημέρωση"
+      },
+      "parcel": {
+        "name": "Δέμα {barcode}"
+      }
+    }
+  }
+}
