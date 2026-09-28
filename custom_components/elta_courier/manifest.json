@@ -2,7 +2,7 @@
   "domain": "elta_courier",
   "name": "ELTA Courier",
   "codeowners": [
-    "@peternijssen"
+    "@peter-mdf"
   ],
   "config_flow": true,
   "documentation": "https://github.com/ha-parcel-integrations/ha-elta-courier",
