@@ -130,7 +130,7 @@
         "name": "Επόμενη παράδοση"
       },
       "delivered_parcels": {
-        "name": "Παραδοθέντα δέματα",
+        "name": "Παραδομένα δέματα",
         "unit_of_measurement": "δέματα"
       },
       "last_update": {
