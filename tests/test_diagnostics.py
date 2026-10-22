@@ -1,4 +1,5 @@
 """Tests for ELTA Courier diagnostics."""
+
 from datetime import timedelta
 from unittest.mock import MagicMock
 
@@ -19,7 +20,14 @@ async def test_diagnostics_redacts_and_counts(hass):
             "sender": "Example Shop",
             "receiver": "Jane Doe",
             "status": "out_for_delivery",
-            "raw": [{"date": "2026-04-01", "time": "09:00", "place": "Coolsingel 1", "status": "Example"}],
+            "raw": [
+                {
+                    "date": "2026-04-01",
+                    "time": "09:00",
+                    "place": "Coolsingel 1",
+                    "status": "Example",
+                }
+            ],
         }
     ]
     entry.runtime_data.coordinator.delivered = []

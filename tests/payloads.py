@@ -6,6 +6,7 @@ and ``status`` labels are the real Greek vocabulary — a made-up label would
 never exercise the real ``_STATUS_MAP`` keys. Tracking codes and ``place``
 depot names below are invented, not copied from any real capture.
 """
+
 from __future__ import annotations
 
 ACTIVE_CODE = "ELTA-TEST-ACTIVE"

@@ -1,4 +1,5 @@
 """Tests for the ELTA Courier refresh button."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 from custom_components.elta_courier.button import ELTACourierRefreshButton

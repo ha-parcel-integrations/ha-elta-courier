@@ -1,4 +1,5 @@
 """Tests for ELTA's conservative payload mapping."""
+
 import logging
 
 from custom_components.elta_courier.const import (
@@ -23,11 +24,29 @@ from .payloads import (
     event,
 )
 
-CANONICAL_KEYS = ["carrier", "barcode", "sender", "receiver", "status", "raw_status", "delivered", "delivered_at", "planned_from", "planned_to", "pickup", "pickup_point", "url", "weight", "dimensions", "history", "raw"]
+CANONICAL_KEYS = [
+    "carrier",
+    "barcode",
+    "sender",
+    "receiver",
+    "status",
+    "raw_status",
+    "delivered",
+    "delivered_at",
+    "planned_from",
+    "planned_to",
+    "pickup",
+    "pickup_point",
+    "url",
+    "weight",
+    "dimensions",
+    "history",
+    "raw",
+]
 
 
 def test_capabilities_are_limited_to_confirmed_fields():
-    assert CAPABILITIES == frozenset({"url", "history"})
+    assert frozenset({"url", "history"}) == CAPABILITIES
     assert CAPABILITIES <= KNOWN_CAPABILITIES
 
 
@@ -46,8 +65,14 @@ def test_normalize_keeps_only_confirmed_fields_and_raw_events():
 
 
 def test_history_sorts_out_of_order_events_and_caps_at_twenty():
-    events = [event("28-04-2026", "10:00", "later"), event("27-04-2026", "10:00", "earlier")]
-    assert [item["raw_status"] for item in build_history(events)] == ["earlier", "later"]
+    events = [
+        event("28-04-2026", "10:00", "later"),
+        event("27-04-2026", "10:00", "earlier"),
+    ]
+    assert [item["raw_status"] for item in build_history(events)] == [
+        "earlier",
+        "later",
+    ]
     many = [event("01-04-2026", f"{hour:02d}:00", str(hour)) for hour in range(25)]
     assert len(build_history(many)) == 20
 
@@ -61,7 +86,9 @@ def test_unmapped_status_warns_once(caplog):
 
 
 def test_missing_fields_do_not_break_normalization():
-    parcel = normalize_parcel({"tracking_code": ACTIVE_CODE, "events": [{"status": "only label"}]})
+    parcel = normalize_parcel(
+        {"tracking_code": ACTIVE_CODE, "events": [{"status": "only label"}]}
+    )
     assert parcel["history"] is None
     assert parcel["raw_status"] == "only label"
 

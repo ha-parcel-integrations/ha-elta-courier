@@ -1,4 +1,5 @@
 """Tests for ELTA's bare form POST client."""
+
 import json
 from unittest.mock import AsyncMock, MagicMock
 
@@ -32,7 +33,9 @@ def _session_returning(
 
 
 async def test_get_parcel_posts_one_code_without_credentials():
-    session = _session_returning(200, {"status": 1, "result": {CODE: {"status": 2, "result": []}}})
+    session = _session_returning(
+        200, {"status": 1, "result": {CODE: {"status": 2, "result": []}}}
+    )
     parcel = await ELTACourierApiClient(session).async_get_parcel(CODE)
     assert parcel == {"tracking_code": CODE, "echoed_tracking_code": CODE, "events": []}
     assert session.post.call_args.args == ("https://www.elta-courier.gr/track.php",)
@@ -42,13 +45,19 @@ async def test_get_parcel_posts_one_code_without_credentials():
 
 @pytest.mark.parametrize("body", [{}, {"result": {}}, {"result": {CODE: {}}}, []])
 async def test_get_parcel_returns_none_for_missing_result(body):
-    assert await ELTACourierApiClient(_session_returning(200, body)).async_get_parcel(CODE) is None
+    assert (
+        await ELTACourierApiClient(_session_returning(200, body)).async_get_parcel(CODE)
+        is None
+    )
 
 
 async def test_get_parcel_returns_none_for_wrong_number_shape():
     """Real 'not found' payload: per-parcel result is the string 'wrong number'."""
     body = {"status": 1, "result": {CODE: {"status": 0, "result": "wrong number"}}}
-    assert await ELTACourierApiClient(_session_returning(200, body)).async_get_parcel(CODE) is None
+    assert (
+        await ELTACourierApiClient(_session_returning(200, body)).async_get_parcel(CODE)
+        is None
+    )
 
 
 async def test_get_parcel_strips_leading_bom_and_newline():
@@ -73,7 +82,9 @@ async def test_get_parcel_raises_for_http_and_non_json():
     with pytest.raises(ELTACourierApiError):
         await ELTACourierApiClient(_session_returning(500, {})).async_get_parcel(CODE)
     with pytest.raises(ELTACourierApiError):
-        await ELTACourierApiClient(_session_returning(200, "not json")).async_get_parcel(CODE)
+        await ELTACourierApiClient(
+            _session_returning(200, "not json")
+        ).async_get_parcel(CODE)
 
 
 async def test_get_parcel_propagates_network_error():
@@ -92,7 +103,9 @@ async def test_get_parcel_429_carries_seconds_retry_after():
 
 
 async def test_get_parcel_429_falls_back_when_retry_after_is_not_seconds():
-    session = _session_returning(429, {}, headers={"Retry-After": "Wed, 21 Oct 2026 07:28:00 GMT"})
+    session = _session_returning(
+        429, {}, headers={"Retry-After": "Wed, 21 Oct 2026 07:28:00 GMT"}
+    )
     with pytest.raises(ELTACourierApiError) as excinfo:
         await ELTACourierApiClient(session).async_get_parcel(CODE)
     assert excinfo.value.status_code == 429
@@ -109,4 +122,8 @@ async def test_get_parcel_429_without_retry_after_header():
 async def test_get_parcel_echoes_the_sole_key_when_it_differs_from_the_request():
     session = _session_returning(200, {"result": {"OTHER-CODE": {"result": []}}})
     parcel = await ELTACourierApiClient(session).async_get_parcel(CODE)
-    assert parcel == {"tracking_code": CODE, "echoed_tracking_code": "OTHER-CODE", "events": []}
+    assert parcel == {
+        "tracking_code": CODE,
+        "echoed_tracking_code": "OTHER-CODE",
+        "events": [],
+    }
