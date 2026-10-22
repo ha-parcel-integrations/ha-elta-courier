@@ -59,7 +59,7 @@ A custom Home Assistant integration that tracks your [ELTA Courier](https://www.
 
 Or click the button below to open it directly in HACS:
 
-[![Open your Home Assistant instance and open this repository in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=ha-parcel-integrations&repository=ha-elta-courier&category=integration)
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=ha-parcel-integrations&repository=ha-elta-courier&category=integration)
 
 ### Manual
 
@@ -67,7 +67,7 @@ Copy `custom_components/elta_courier` into your `config/custom_components/` fold
 
 ## Configuration
 
-[![Open your Home Assistant instance and start setting up this integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=elta_courier)
+[![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=elta_courier)
 
 Or set it up by hand: add the integration via **Settings → Devices & Services → Add Integration → ELTA Courier**. There is nothing to fill in: the hub is created immediately (ELTA Courier tracking needs no account).
 
