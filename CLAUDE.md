@@ -39,19 +39,26 @@ you act in one of these areas:
   status/code**, it needs an `awaiting_pickup` sensor — see *Parcel contract*
   in `CONVENTIONS.md`. Say "pickup point", not "ServicePoint"/"parcel
   shop"/"locker", for the generic concept. `ha-dhl-nl`, `ha-dpd`, `ha-gls`,
-  `ha-inpost` are reference implementations; `elta_courier` here does not
-  demonstrate it yet.
+  `ha-inpost` are reference implementations; `elta_courier` has it for the
+  at-store label.
 
 ## Carrier-specific notes
 
 ELTA is an account-less, code-only integration. It sends exactly one form POST
 per configured code and never fetches codes concurrently because the carrier is
-rate-sensitive. The known payload does not yet prove timestamp timezone or any
-status label's canonical meaning: all labels therefore remain `unknown` and
-emit a one-shot WARNING with an issue link. Sender, receiver, ETA, pickup,
-weight and dimensions are intentionally `None`; only the tracking-page URL and
-optional event history are exposed. Diagnostics redact tracking codes and every
-event `place` value.
+rate-sensitive. Timestamps are Greek local time (`Europe/Athens`).
+
+- **Status map is exact-match on the Greek label** (`_STATUS_MAP`), eight
+  confirmed labels. An unmapped newest label falls back to the newest mapped
+  earlier event, then `unknown`, and warns once either way.
+- **Recipient absent is `problem`**, not `in_transit`: a failed attempt that
+  needs the user to act, as everywhere else in the suite.
+- **The at-store label is `at_pickup_point`**, so the repo has the
+  `awaiting_pickup` sensor. `pickup` follows that status; `pickup_point` stays
+  `None`: which field names the store is not established.
+- Sender, receiver, ETA, weight and dimensions are `None`; only the
+  tracking-page URL and optional event history are capabilities. Diagnostics
+  redact tracking codes and every event `place` value.
 
 ## Options and reloads
 

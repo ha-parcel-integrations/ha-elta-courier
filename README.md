@@ -35,7 +35,7 @@ A custom Home Assistant integration that tracks your [ELTA Courier](https://www.
 
 - Track any number of ELTA Courier parcels by tracking code — no account needed
 - Per-parcel sensor with the carrier's latest status label, optional event history and a tracking-page link
-- Summary sensors: incoming parcels, next delivery, recently delivered parcels
+- Summary sensors: incoming parcels, next delivery, awaiting pickup, recently delivered parcels
 - Read-only **Deliveries** calendar with the expected delivery windows
 - `elta_courier.track_parcel` / `elta_courier.untrack_parcel` services, so a dashboard button can add a parcel
 - Events + device triggers for no-code automations (parcel registered, status changed, delivered, delivery time changed)
@@ -115,6 +115,7 @@ Standard HA removal applies: **Settings → Devices & Services → ELTA Courier 
 | `sensor.elta_courier_incoming_parcels` | Number of active tracked parcels, full list under the `parcels` attribute |
 | `sensor.elta_courier_parcel_<code>` | One per tracked parcel; state is the canonical status, attributes carry the full normalised parcel |
 | `sensor.elta_courier_next_delivery` | Earliest expected delivery moment across all active parcels |
+| `sensor.elta_courier_awaiting_pickup` | Incoming parcels waiting at an ELTA store for you to collect them |
 | `sensor.elta_courier_delivered_parcels` | Recently delivered parcels (see the retention option) |
 | `calendar.elta_courier_deliveries` | Read-only calendar of expected deliveries, no extra API calls |
 | `sensor.elta_courier_last_successful_update` | Diagnostic: when ELTA Courier was last polled successfully |
@@ -127,10 +128,17 @@ The `status` field is the carrier-agnostic enum shared by the whole integration 
 
 | Status | Meaning |
 |---|---|
-| `unknown` | Not yet scanned, or a carrier label awaiting a verified mapping |
+| `registered` | The shipment was created but not handed over yet |
+| `in_transit` | Picked up from the sender, or moving through ELTA's network |
+| `out_for_delivery` | With a courier for delivery |
+| `problem` | The recipient was not home; contact the store |
+| `at_pickup_point` | Waiting at an ELTA store, ready to collect |
+| `delivered` | Delivered |
+| `unknown` | Not yet scanned, or a status we have not mapped yet |
 
-The carrier's own latest label is available as `raw_status`. Status labels and
-timestamp timezone will be mapped only after a privacy-safe live fixture.
+The carrier's own latest label is available as `raw_status`. A label we have
+not mapped yet takes its status from the newest earlier scan that we have
+mapped, and logs a warning once.
 
 ## Events
 

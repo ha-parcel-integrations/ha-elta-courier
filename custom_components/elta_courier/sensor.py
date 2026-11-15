@@ -19,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import ELTACourierConfigEntry
-from .const import DOMAIN
+from .const import DOMAIN, ParcelStatus
 from .coordinator import ELTACourierCoordinator
 from .device import ATTRIBUTION, build_device_info
 from .parcels import parse_iso
@@ -53,6 +53,7 @@ async def async_setup_entry(
     non_parcel_unique_ids = {
         f"{entry_id}_incoming_parcels",
         f"{entry_id}_next_delivery",
+        f"{entry_id}_awaiting_pickup",
         f"{entry_id}_delivered_parcels",
         f"{entry_id}_last_update",
     }
@@ -76,6 +77,7 @@ async def async_setup_entry(
         for parcel in coordinator.data or []
     )
     entities.append(ELTACourierNextDeliverySensor(coordinator, entry))
+    entities.append(ELTACourierAwaitingPickupSensor(coordinator, entry))
     entities.append(ELTACourierDeliveredParcelsSensor(coordinator, entry))
     entities.append(ELTACourierLastUpdateSensor(coordinator, entry))
 
@@ -234,6 +236,41 @@ class ELTACourierNextDeliverySensor(
             "sender": earliest.get("sender"),
             "receiver": earliest.get("receiver"),
         }
+
+
+class ELTACourierAwaitingPickupSensor(
+    CoordinatorEntity[ELTACourierCoordinator], SensorEntity
+):
+    """Parcels ready to collect at an ELTA store."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "awaiting_pickup"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_attribution = ATTRIBUTION
+    _unrecorded_attributes = frozenset({"parcels"})
+
+    def __init__(self, coordinator: ELTACourierCoordinator, entry: ConfigEntry) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{entry.entry_id}_awaiting_pickup"
+        self._attr_device_info = build_device_info(entry)
+
+    def _parcels(self) -> list[dict]:
+        return [
+            p
+            for p in (self.coordinator.data or [])
+            if p.get("status") == ParcelStatus.AT_PICKUP_POINT
+        ]
+
+    @property
+    def native_value(self) -> int:
+        """Return the native value of the sensor."""
+        return len(self._parcels())
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the extra state attributes."""
+        return {"parcels": self._parcels()}
 
 
 class ELTACourierDeliveredParcelsSensor(

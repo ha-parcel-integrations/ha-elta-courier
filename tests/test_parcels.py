@@ -16,12 +16,17 @@ from custom_components.elta_courier.parcels import (
 from .payloads import (
     ACTIVE_CODE,
     STATUS_ARRIVAL,
+    STATUS_AT_STORE,
     STATUS_DELIVERED,
     STATUS_IN_TRANSIT,
     STATUS_OUT_FOR_DELIVERY,
+    STATUS_PICKED_UP,
+    STATUS_RECIPIENT_ABSENT,
     STATUS_REGISTERED,
     active_sample,
+    delivered_sample,
     event,
+    pickup_sample,
 )
 
 CANONICAL_KEYS = [
@@ -94,8 +99,10 @@ def test_missing_fields_do_not_break_normalization():
 
 
 def test_confirmed_status_map_covers_exactly_the_real_vocabulary():
-    """The five real Greek labels observed across all five captured parcels."""
     assert map_parcel_status(STATUS_REGISTERED) is ParcelStatus.REGISTERED
+    assert map_parcel_status(STATUS_PICKED_UP) is ParcelStatus.IN_TRANSIT
+    assert map_parcel_status(STATUS_RECIPIENT_ABSENT) is ParcelStatus.PROBLEM
+    assert map_parcel_status(STATUS_AT_STORE) is ParcelStatus.AT_PICKUP_POINT
     assert map_parcel_status(STATUS_IN_TRANSIT) is ParcelStatus.IN_TRANSIT
     assert map_parcel_status(STATUS_ARRIVAL) is ParcelStatus.IN_TRANSIT
     assert map_parcel_status(STATUS_OUT_FOR_DELIVERY) is ParcelStatus.OUT_FOR_DELIVERY
@@ -117,3 +124,26 @@ def test_event_timestamps_parse_dd_mm_yyyy_as_athens_local_time():
 def test_event_with_unparseable_date_keeps_null_timestamp():
     history = build_history([event("not-a-date", "11:21", STATUS_DELIVERED)])
     assert history[0]["timestamp"] is None
+
+
+def test_parcel_waiting_at_the_store_is_a_pickup():
+    parcel = normalize_parcel(pickup_sample())
+    assert parcel["status"] is ParcelStatus.AT_PICKUP_POINT
+    assert parcel["pickup"] is True
+    assert parcel["pickup_point"] is None
+
+
+def test_unmapped_newest_label_falls_back_to_the_newest_mapped_event(caplog):
+    caplog.set_level(logging.WARNING)
+    sample = active_sample()
+    sample["events"].append(event("29-04-2026", "08:00", "brand new label"))
+    parcel = normalize_parcel(sample)
+    assert parcel["status"] is ParcelStatus.OUT_FOR_DELIVERY
+    assert parcel["raw_status"] == "brand new label"
+    assert "brand new label" in caplog.text
+
+
+def test_delivered_at_is_the_delivery_event_time():
+    parcel = normalize_parcel(delivered_sample())
+    assert parcel["delivered"] is True
+    assert parcel["delivered_at"] == "2026-04-29T15:45:00+03:00"

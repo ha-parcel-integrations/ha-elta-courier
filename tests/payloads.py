@@ -19,6 +19,9 @@ STATUS_IN_TRANSIT = "Αποστολή βρίσκεται σε στάδιο με�
 STATUS_ARRIVAL = "Άφιξη σε"
 STATUS_OUT_FOR_DELIVERY = "Σε διανομέα προς παράδοση"
 STATUS_DELIVERED = "Αποστολή παραδόθηκε"
+STATUS_PICKED_UP = "Παραλαβή αποστολής"
+STATUS_RECIPIENT_ABSENT = "Απουσία παραλήπτη - Επικοινωνία με το κατάστημα"
+STATUS_AT_STORE = "Αποστολή βρίσκεται στο κατάστημα-Δυνατότητα παραλαβής"
 
 DEPOT = "ΚΤΕΠ ΤΕΣΤ - ΔΙΑΛΟΓΗ"
 
@@ -46,7 +49,9 @@ def delivered_sample(code: str = DELIVERED_CODE) -> dict:
 
 
 def pickup_sample(code: str = ACTIVE_CODE) -> dict:
-    return active_sample(code)
+    sample = active_sample(code)
+    sample["events"].append(event("29-04-2026", "10:05", STATUS_AT_STORE))
+    return sample
 
 
 def not_found_envelope(code: str = NOT_FOUND_CODE) -> dict:

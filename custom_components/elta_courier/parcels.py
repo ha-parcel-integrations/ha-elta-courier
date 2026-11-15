@@ -22,16 +22,20 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 NEW_ISSUE_URL = "https://github.com/ha-parcel-integrations/ha-elta-courier/issues/new?template=unrecognised_status.yml"
 
-# The complete Greek status vocabulary observed across five real tracked
-# parcels. Exact-match, not prefix: the location that "Άφιξη σε" (arrival at)
-# refers to always arrives in the event's own ``place`` field, never appended
-# to ``status`` itself, in every capture seen so far. Extend only from a new
-# real fixture — never guess a label.
+# Exact-match, not prefix: the location that "Άφιξη σε" (arrival at) refers to
+# always arrives in the event's own ``place`` field, never appended to
+# ``status`` itself. Extend only from a label a real payload has shown.
 _STATUS_MAP: dict[str, ParcelStatus] = {
     "Δημιουργία ΣΥ.ΔΕ.ΤΑ.": ParcelStatus.REGISTERED,
+    "Παραλαβή αποστολής": ParcelStatus.IN_TRANSIT,
     "Αποστολή βρίσκεται σε στάδιο μεταφοράς": ParcelStatus.IN_TRANSIT,
     "Άφιξη σε": ParcelStatus.IN_TRANSIT,
     "Σε διανομέα προς παράδοση": ParcelStatus.OUT_FOR_DELIVERY,
+    # Recipient not home: the parcel waits for them to contact the store.
+    "Απουσία παραλήπτη - Επικοινωνία με το κατάστημα": ParcelStatus.PROBLEM,
+    "Αποστολή βρίσκεται στο κατάστημα-Δυνατότητα παραλαβής": (
+        ParcelStatus.AT_PICKUP_POINT
+    ),
     "Αποστολή παραδόθηκε": ParcelStatus.DELIVERED,
 }
 _unmapped_statuses_logged: set[str] = set()
@@ -57,7 +61,7 @@ def _warn_unmapped_status(label: str) -> None:
 
 
 def map_parcel_status(label: str | None) -> ParcelStatus:
-    """Map only fixture-confirmed labels; ELTA's map starts empty."""
+    """Map a confirmed label, warning once for any other."""
     if not label:
         return ParcelStatus.UNKNOWN
     mapped = _STATUS_MAP.get(label)
@@ -89,10 +93,8 @@ def _published_timestamp(event: dict[str, Any]) -> str | None:
     return parsed.isoformat() if parsed and parsed.tzinfo is not None else None
 
 
-def build_history(
-    events: list | None, *, max_events: int = HISTORY_MAX_EVENTS
-) -> list[dict]:
-    """Return ELTA history oldest-first, preserving unknown timestamps as null."""
+def _sorted_events(events: list | None) -> list[dict[str, Any]]:
+    """Return the events oldest-first, untimed ones last."""
     indexed = [event for event in events or [] if isinstance(event, dict)]
     indexed.sort(
         key=lambda event: (
@@ -100,6 +102,14 @@ def build_history(
             _event_time(event) or datetime.max,
         )
     )
+    return indexed
+
+
+def build_history(
+    events: list | None, *, max_events: int = HISTORY_MAX_EVENTS
+) -> list[dict]:
+    """Return ELTA history oldest-first, preserving unknown timestamps as null."""
+    indexed = _sorted_events(events)
     return [
         {
             "timestamp": _published_timestamp(event),
@@ -124,11 +134,19 @@ def normalize_parcel(raw: dict, *, include_history: bool = False) -> dict:
             "ELTA Courier response tracking-code mismatch; keeping the configured code"
         )
     events = [event for event in raw.get("events", []) if isinstance(event, dict)]
-    history = build_history(events)
-    newest = history[-1] if history else None
-    raw_status = newest["raw_status"] if newest else None
+    ordered = _sorted_events(events)
+    newest_event = ordered[-1] if ordered else None
+    raw_status = (newest_event or {}).get("status") or None
     status = map_parcel_status(raw_status)
+    status_event = newest_event
+    if status is ParcelStatus.UNKNOWN:
+        for event in reversed(ordered):
+            mapped = map_event_status(event.get("status"))
+            if mapped is not None:
+                status, status_event = mapped, event
+                break
     delivered = status is ParcelStatus.DELIVERED
+    at_pickup_point = status is ParcelStatus.AT_PICKUP_POINT
     return {
         "carrier": "ELTA Courier",
         "barcode": code,
@@ -137,15 +155,17 @@ def normalize_parcel(raw: dict, *, include_history: bool = False) -> dict:
         "status": status,
         "raw_status": raw_status,
         "delivered": delivered,
-        "delivered_at": newest["timestamp"] if delivered and newest else None,
+        "delivered_at": (
+            _published_timestamp(status_event) if delivered and status_event else None
+        ),
         "planned_from": None,
         "planned_to": None,
-        "pickup": False,
+        "pickup": at_pickup_point,
         "pickup_point": None,
         "url": tracking_url(code),
         "weight": None,
         "dimensions": None,
-        "history": history if include_history else None,
+        "history": build_history(ordered) if include_history else None,
         "raw": [
             {key: event.get(key) for key in ("date", "time", "place", "status")}
             for event in events

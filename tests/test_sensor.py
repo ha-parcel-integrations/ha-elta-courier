@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 from custom_components.elta_courier.const import ParcelStatus
 from custom_components.elta_courier.sensor import (
+    ELTACourierAwaitingPickupSensor,
     ELTACourierDeliveredParcelsSensor,
     ELTACourierIncomingParcelsSensor,
     ELTACourierLastUpdateSensor,
@@ -109,3 +110,16 @@ def test_last_update_sensor():
     coordinator.last_success_time = moment
     sensor = ELTACourierLastUpdateSensor(coordinator, _entry())
     assert sensor.native_value == moment
+
+
+def test_awaiting_pickup_counts_only_at_pickup_point_status():
+    coordinator = _coordinator(
+        [
+            _parcel("A", status=ParcelStatus.AT_PICKUP_POINT),
+            _parcel("B", status=ParcelStatus.IN_TRANSIT, pickup=True),
+        ]
+    )
+    sensor = ELTACourierAwaitingPickupSensor(coordinator, _entry())
+    assert sensor.native_value == 1
+    assert sensor.extra_state_attributes["parcels"][0]["barcode"] == "A"
+    assert sensor.unique_id == "e1_awaiting_pickup"

@@ -129,6 +129,10 @@
       "next_delivery": {
         "name": "Επόμενη παράδοση"
       },
+      "awaiting_pickup": {
+        "name": "Έτοιμα για παραλαβή",
+        "unit_of_measurement": "δέματα"
+      },
       "delivered_parcels": {
         "name": "Παραδομένα δέματα",
         "unit_of_measurement": "δέματα"
