@@ -35,12 +35,15 @@ you act in one of these areas:
   summary+diagnostic sensors. Add a new non-parcel sensor's unique_id to the set.
 - **Per-parcel sensors are removed by the summary sensor** via
   `entity_registry.async_remove` (self-removal races and leaves ghosts).
-- **If this carrier can reach `ParcelStatus.AT_PICKUP_POINT` from a real raw
-  status/code**, it needs an `awaiting_pickup` sensor — see *Parcel contract*
-  in `CONVENTIONS.md`. Say "pickup point", not "ServicePoint"/"parcel
-  shop"/"locker", for the generic concept. `ha-dhl-nl`, `ha-dpd`, `ha-gls`,
-  `ha-inpost` are reference implementations; `elta_courier` has it for the
-  at-store label.
+- **The pickup-point summaries are a pair.** A carrier that can deliver to a
+  pickup point or locker exposes both `en_route_to_pickup_point` and
+  `awaiting_pickup`, even before a real parcel has shown the status or flag
+  (they read 0 until then; record it in `PENDING_*`). A carrier without pickup
+  points exposes neither and keeps `pickup` constantly False.
+  See *Parcel contract* in `CONVENTIONS.md`. Say "pickup point", not
+  "ServicePoint"/"parcel shop"/"locker", for the generic concept; the
+  example carrier demonstrates both canonical sensors.
+  `elta_courier` has it for the at-store label.
 
 ## Carrier-specific notes
 
@@ -53,9 +56,13 @@ rate-sensitive. Timestamps are Greek local time (`Europe/Athens`).
   earlier event, then `unknown`, and warns once either way.
 - **Recipient absent is `problem`**, not `in_transit`: a failed attempt that
   needs the user to act, as everywhere else in the suite.
-- **The at-store label is `at_pickup_point`**, so the repo has the
-  `awaiting_pickup` sensor. `pickup` follows that status; `pickup_point` stays
-  `None`: which field names the store is not established.
+- **The at-store label is `at_pickup_point`**, so the repo has both pickup
+  sensors, `awaiting_pickup` and `en_route_to_pickup_point`. `pickup` stays
+  `True` once a parcel has reached the store, also after collection. ELTA gives
+  no route flag, so a parcel only counts as `pickup` from the at-store scan and
+  `en_route_to_pickup_point` reads 0 until a payload shows the route earlier
+  (`PENDING_CAPABILITIES`). `pickup_point` stays `None`: which field names the
+  store is not established.
 - Sender, receiver, ETA, weight and dimensions are `None`; only the
   tracking-page URL and optional event history are capabilities. Diagnostics
   redact tracking codes and every event `place` value.

@@ -35,7 +35,7 @@ A custom Home Assistant integration that tracks your [ELTA Courier](https://www.
 
 - Track any number of ELTA Courier parcels by tracking code — no account needed
 - Per-parcel sensor with the carrier's latest status label, optional event history and a tracking-page link
-- Summary sensors: incoming parcels, next delivery, awaiting pickup, recently delivered parcels
+- Summary sensors: incoming parcels, next delivery, en route to pickup point, awaiting pickup, recently delivered parcels
 - Read-only **Deliveries** calendar with the expected delivery windows
 - `elta_courier.track_parcel` / `elta_courier.untrack_parcel` services, so a dashboard button can add a parcel
 - Events + device triggers for no-code automations (parcel registered, status changed, delivered, delivery time changed)
@@ -115,6 +115,7 @@ Standard HA removal applies: **Settings → Devices & Services → ELTA Courier 
 | `sensor.elta_courier_incoming_parcels` | Number of active tracked parcels, full list under the `parcels` attribute |
 | `sensor.elta_courier_parcel_<code>` | One per tracked parcel; state is the canonical status, attributes carry the full normalised parcel |
 | `sensor.elta_courier_next_delivery` | Earliest expected delivery moment across all active parcels |
+| `sensor.elta_courier_en_route_to_pickup_point` | Incoming parcels known to be going to an ELTA store that have not arrived yet |
 | `sensor.elta_courier_awaiting_pickup` | Incoming parcels waiting at an ELTA store for you to collect them |
 | `sensor.elta_courier_delivered_parcels` | Recently delivered parcels (see the retention option) |
 | `calendar.elta_courier_deliveries` | Read-only calendar of expected deliveries, no extra API calls |

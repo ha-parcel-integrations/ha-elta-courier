@@ -7,6 +7,7 @@ from custom_components.elta_courier.const import ParcelStatus
 from custom_components.elta_courier.sensor import (
     ELTACourierAwaitingPickupSensor,
     ELTACourierDeliveredParcelsSensor,
+    ELTACourierEnRouteToPickupPointSensor,
     ELTACourierIncomingParcelsSensor,
     ELTACourierLastUpdateSensor,
     ELTACourierNextDeliverySensor,
@@ -69,12 +70,12 @@ def test_parcel_sensor_missing_barcode():
 def test_next_delivery_picks_earliest():
     coordinator = _coordinator(
         [
-            _parcel("A", planned_from="2026-05-02T10:00:00Z"),
-            _parcel("B", planned_from="2026-05-01T10:00:00Z"),
+            _parcel("A", planned_from="2099-05-02T10:00:00Z"),
+            _parcel("B", planned_from="2099-05-01T10:00:00Z"),
         ]
     )
     sensor = ELTACourierNextDeliverySensor(coordinator, _entry())
-    assert sensor.native_value == datetime(2026, 5, 1, 10, 0, tzinfo=UTC)
+    assert sensor.native_value == datetime(2099, 5, 1, 10, 0, tzinfo=UTC)
     assert sensor.extra_state_attributes["barcode"] == "B"
 
 
@@ -88,7 +89,7 @@ def test_next_delivery_skips_unparseable_moment():
     coordinator = _coordinator(
         [
             _parcel("A", planned_from="not-a-date"),
-            _parcel("B", planned_from="2026-05-01T10:00:00Z"),
+            _parcel("B", planned_from="2099-05-01T10:00:00Z"),
         ]
     )
     sensor = ELTACourierNextDeliverySensor(coordinator, _entry())
@@ -123,3 +124,33 @@ def test_awaiting_pickup_counts_only_at_pickup_point_status():
     assert sensor.native_value == 1
     assert sensor.extra_state_attributes["parcels"][0]["barcode"] == "A"
     assert sensor.unique_id == "e1_awaiting_pickup"
+
+
+def test_next_delivery_skips_a_window_that_has_ended():
+    coordinator = _coordinator(
+        [
+            _parcel("OLD", planned_from="2000-01-01T10:00:00Z"),
+            _parcel("NEW", planned_from="2099-01-01T10:00:00Z"),
+        ]
+    )
+    sensor = ELTACourierNextDeliverySensor(coordinator, _entry())
+    assert sensor.extra_state_attributes["barcode"] == "NEW"
+
+
+def test_en_route_and_awaiting_pickup_share_no_parcel():
+    parcels = [
+        _parcel("A", status=ParcelStatus.IN_TRANSIT, pickup=True),
+        _parcel("B", status=ParcelStatus.AT_PICKUP_POINT, pickup=True),
+        _parcel("C", status=ParcelStatus.RETURNING, pickup=True),
+        _parcel("D", status=ParcelStatus.IN_TRANSIT),
+    ]
+    en_route = ELTACourierEnRouteToPickupPointSensor(_coordinator(parcels), _entry())
+    awaiting = ELTACourierAwaitingPickupSensor(_coordinator(parcels), _entry())
+    assert en_route.unique_id == "e1_en_route_to_pickup_point"
+    assert [p["barcode"] for p in en_route.extra_state_attributes["parcels"]] == ["A"]
+    assert [p["barcode"] for p in awaiting.extra_state_attributes["parcels"]] == ["B"]
+    assert en_route.native_value == 1
+    assert (
+        ELTACourierEnRouteToPickupPointSensor(_coordinator([]), _entry()).native_value
+        == 0
+    )
