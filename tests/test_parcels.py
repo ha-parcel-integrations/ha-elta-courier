@@ -34,6 +34,7 @@ CANONICAL_KEYS = [
     "barcode",
     "sender",
     "receiver",
+    "contents",
     "status",
     "raw_status",
     "delivered",
@@ -61,7 +62,7 @@ def test_normalize_keeps_only_confirmed_fields_and_raw_events():
     assert parcel["barcode"] == ACTIVE_CODE
     assert parcel["status"] is ParcelStatus.OUT_FOR_DELIVERY
     assert parcel["delivered"] is False
-    assert parcel["sender"] is parcel["receiver"] is None
+    assert parcel["sender"] is parcel["receiver"] is parcel["contents"] is None
     assert parcel["planned_from"] is parcel["planned_to"] is None
     assert parcel["url"] == "https://www.elta-courier.gr/track"
     assert parcel["raw"] == active_sample()["events"]

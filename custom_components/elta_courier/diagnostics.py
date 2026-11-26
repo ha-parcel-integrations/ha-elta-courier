@@ -18,6 +18,7 @@ TO_REDACT = {
     "tracking_code",
     "barcode",
     "receiver",
+    "contents",
     "url",
     "place",
 }

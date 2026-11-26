@@ -154,3 +154,10 @@ def test_en_route_and_awaiting_pickup_share_no_parcel():
         ELTACourierEnRouteToPickupPointSensor(_coordinator([]), _entry()).native_value
         == 0
     )
+
+
+def test_next_delivery_carries_the_contents():
+    parcel = _parcel("A", planned_from="2099-05-01T10:00:00Z")
+    parcel["contents"] = "Running shoes"
+    sensor = ELTACourierNextDeliverySensor(_coordinator([parcel]), _entry())
+    assert sensor.extra_state_attributes["contents"] == "Running shoes"

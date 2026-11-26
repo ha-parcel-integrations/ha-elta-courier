@@ -134,3 +134,13 @@ def test_a_moment_stretched_to_end_of_day_stays_timed():
         ]
     )
     assert isinstance(cal._events()[0].start, datetime)
+
+
+def test_event_title_is_the_contents_then_the_sender_then_the_fallback():
+    with_contents = _parcel("A", planned_from="2099-01-01T10:00:00Z")
+    with_contents["contents"] = "Running shoes"
+    assert _cal([with_contents]).event.summary == "Running shoes"
+
+    no_sender = _parcel("B", planned_from="2099-01-01T10:00:00Z")
+    no_sender["sender"] = None
+    assert _cal([no_sender]).event.summary == "Parcel B"
